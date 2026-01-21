@@ -14,14 +14,14 @@
         .btn-no { background-color: #eee; }
         .admin-link { position: fixed; bottom: 10px; right: 10px; color: #ccc; cursor: pointer; font-size: 12px; }
         .hidden { display: none !important; }
-        input { padding: 8px; margin: 5px; border-radius: 5px; border: 1px solid #ddd; width: 80%; }
+        input { padding: 8px; margin: 5px; border-radius: 5px; border: 1px solid #ddd; width: 85%; }
     </style>
 </head>
 <body>
 
     <div id="main-card" class="card">
-        <h1>可以來我家嗎？</h1>
-        <p id="display-time" class="time-text">讀取中...</p>
+        <h1>可以去你家嗎？</h1>
+        <p id="display-time" class="time-text">載入中...</p>
         <button class="btn-yes" onclick="answer('可以')">好呀！</button>
         <button class="btn-no" onclick="answer('不行')">不行...</button>
     </div>
@@ -32,11 +32,13 @@
         <button onclick="login()">登入</button>
         <div id="admin-controls" class="hidden">
             <hr>
+            <p>你的名字：</p>
+            <input type="text" id="user-name" placeholder="例如：小明">
             <p>設定新時間：</p>
-            <input type="text" id="new-time" placeholder="例如：週六晚上">
-            <button onclick="updateTime()">更新並儲存</button>
+            <input type="text" id="new-time" placeholder="例如：這週六晚上">
+            <button onclick="updateSettings()">更新並儲存</button>
             <br><br>
-            <button onclick="window.location.reload()">返回</button>
+            <button onclick="window.location.reload()">返回首頁</button>
         </div>
     </div>
 
@@ -44,42 +46,33 @@
 
     <script>
         // 設定區
-        const ADMIN_PASSWORD = "你的密碼123"; 
+        const ADMIN_PASSWORD = "12345678"; 
         const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdsl-Fe1LRzwl7LVmPEQ51EyYFQvk5vtjczLi6hpick-4ibLA/formResponse";
         const ENTRY_ID = "entry.2074465160";
 
-        // 頁面初始化
+        // 初始化
         window.onload = function() {
-            const savedTime = localStorage.getItem('inviteTime') || "今天晚上 7 點";
-            document.getElementById('display-time').innerText = savedTime;
+            document.getElementById('display-time').innerText = localStorage.getItem('inviteTime') || "今天晚上 7 點";
+            document.getElementById('user-name').value = localStorage.getItem('userName') || "";
         };
 
-        // 按鈕功能
         function answer(choice) {
+            const name = localStorage.getItem('userName') || "匿名";
             const formData = new FormData();
-            formData.append(ENTRY_ID, choice);
+            // 將名字和選擇合併記錄 (例如: 小明說可以)
+            formData.append(ENTRY_ID, `${name} 說：${choice}`);
 
-            fetch(FORM_URL, {
-                method: "POST",
-                body: formData,
-                mode: "no-cors"
-            }).then(() => {
-                alert("回覆已傳送：" + choice);
-            }).catch(() => {
-                alert("傳送失敗，請檢查網路");
-            });
+            fetch(FORM_URL, { method: "POST", body: formData, mode: "no-cors" });
+            alert(`已記錄：${name} 選擇了 ${choice}`);
         }
 
-        // 後台切換
         function toggleAdmin() {
             document.getElementById('main-card').classList.toggle('hidden');
             document.getElementById('admin-card').classList.toggle('hidden');
         }
 
-        // 登入
         function login() {
-            const pass = document.getElementById('admin-pass').value;
-            if (pass === ADMIN_PASSWORD) {
+            if (document.getElementById('admin-pass').value === ADMIN_PASSWORD) {
                 document.getElementById('admin-controls').classList.remove('hidden');
                 document.getElementById('admin-pass').classList.add('hidden');
             } else {
@@ -87,16 +80,14 @@
             }
         }
 
-        // 更新時間
-        function updateTime() {
+        function updateSettings() {
             const time = document.getElementById('new-time').value;
-            if (time) {
-                localStorage.setItem('inviteTime', time);
-                alert("更新成功！");
-                window.location.reload();
-            }
+            const name = document.getElementById('user-name').value;
+            if (time) localStorage.setItem('inviteTime', time);
+            if (name) localStorage.setItem('userName', name);
+            alert("設定已儲存！");
+            window.location.reload();
         }
     </script>
 </body>
 </html>
-
