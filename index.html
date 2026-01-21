@@ -14,6 +14,7 @@
         .btn-no { background-color: #eee; }
         .admin-link { position: fixed; bottom: 10px; right: 10px; color: #ccc; cursor: pointer; font-size: 12px; }
         .hidden { display: none; }
+        input { padding: 8px; margin: 5px; border-radius: 5px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
@@ -34,48 +35,13 @@
             <p>設定新時間：</p>
             <input type="text" id="new-time" placeholder="例如：明天晚上 8 點">
             <button onclick="updateTime()">更新時間</button>
-            <p>最近的回答將記錄在 Google Sheets 中</p>
+            <br><br>
+            <button onclick="location.reload()">回首頁</button>
         </div>
     </div>
 
     <div class="admin-link" onclick="toggleAdmin()">管理員登入</div>
 
     <script>
-        // 設定區
-        const ADMIN_PASSWORD = "你的密碼123"; // 在這裡修改你的管理密碼
-        let inviteTime = localStorage.getItem('inviteTime') || "今天晚上 7 點";
-
-        // 初始化顯示
-        document.getElementById('display-time').innerText = inviteTime;
-
-        function answer(choice) {
-            alert("你選擇了：" + choice + "！(此處可串接 Google 表單 API 記錄回答)");
-            // 範例：console.log("記錄到後台:", choice);
-            // 這裡建議串接 Google Forms 的預填連結
-        }
-
-        function toggleAdmin() {
-            document.getElementById('main-card').classList.add('hidden');
-            document.getElementById('admin-card').classList.remove('hidden');
-        }
-
-        function login() {
-            const pass = document.getElementById('admin-pass').value;
-            if (pass === ADMIN_PASSWORD) {
-                document.getElementById('admin-controls').classList.remove('hidden');
-            } else {
-                alert("密碼錯誤！");
-            }
-        }
-
-        function updateTime() {
-            const time = document.getElementById('new-time').value;
-            if (time) {
-                localStorage.setItem('inviteTime', time);
-                alert("時間已更新為：" + time);
-                location.reload();
-            }
-        }
-    </script>
-</body>
-</html>
+        // --- 設定區 ---
+        const ADMIN_PASSWORD = "你的密碼123"; // 在這裡修改你的管理
