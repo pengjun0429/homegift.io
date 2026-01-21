@@ -12,9 +12,9 @@
         button { border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 1rem; transition: 0.3s; margin: 5px; }
         .btn-yes { background-color: #ff6b6b; color: white; }
         .btn-no { background-color: #eee; }
-        .admin-link { position: fixed; bottom: 10px; right: 10px; color: #ccc; cursor: pointer; font-size: 12px; }
-        .hidden { display: none; }
-        input { padding: 8px; margin: 5px; border-radius: 5px; border: 1px solid #ddd; }
+        .admin-link { position: fixed; bottom: 10px; right: 10px; color: #ccc; cursor: pointer; font-size: 12px; z-index: 100; }
+        .hidden { display: none !important; }
+        input { padding: 8px; margin: 5px; border-radius: 5px; border: 1px solid #ddd; width: 80%; }
     </style>
 </head>
 <body>
@@ -28,20 +28,32 @@
 
     <div class="card hidden" id="admin-card">
         <h2>管理後台</h2>
-        <input type="password" id="admin-pass" placeholder="輸入密碼">
+        <input type="password" id="admin-pass" placeholder="輸入管理密碼">
         <button onclick="login()">登入</button>
         <div id="admin-controls" class="hidden">
             <hr>
             <p>設定新時間：</p>
             <input type="text" id="new-time" placeholder="例如：明天晚上 8 點">
-            <button onclick="updateTime()">更新時間</button>
+            <button onclick="updateTime()">更新並儲存</button>
             <br><br>
-            <button onclick="location.reload()">回首頁</button>
+            <button onclick="window.location.reload()">返回首頁</button>
         </div>
     </div>
 
     <div class="admin-link" onclick="toggleAdmin()">管理員登入</div>
 
     <script>
-        // --- 設定區 ---
-        const ADMIN_PASSWORD = "你的密碼123"; // 在這裡修改你的管理
+        // --- 核心設定 (請確認這部分有正確複製) ---
+        const ADMIN_PASSWORD = "你的密碼123"; 
+        const FORM_ID = "1FAIpQLSdsl-Fe1LRzwl7LVmPEQ51EyYFQvk5vtjczLi6hpick-4ibLA";
+        const ENTRY_ID = "2074465160";
+
+        // 讀取儲存的時間
+        let inviteTime = localStorage.getItem('inviteTime') || "今天晚上 7 點";
+        document.getElementById('display-time').innerText = inviteTime;
+
+        // 提交回答到 Google 表單
+        async function answer(choice) {
+            const baseUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
+            const formData = new FormData();
+            formData.append(`entry.${ENTRY_ID}`, choice);
