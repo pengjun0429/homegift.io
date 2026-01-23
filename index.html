@@ -5,88 +5,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>神祕的邀約</title>
     <style>
-        body { font-family: sans-serif; background-color: #ffe4e1; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 300px; }
-        h1 { color: #ff6b6b; }
-        .time-text { font-size: 1.2rem; margin: 10px 0; color: #555; }
-        button { border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 1rem; transition: 0.3s; margin: 5px; }
-        .btn-yes { background-color: #ff6b6b; color: white; }
-        .btn-no { background-color: #eee; }
-        .admin-link { position: fixed; bottom: 10px; right: 10px; color: #ccc; cursor: pointer; font-size: 12px; }
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background-color: #ffe4e1; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 320px; }
+        h1 { color: #ff6b6b; margin-bottom: 10px; }
+        .time-text { font-size: 1.2rem; margin: 15px 0; color: #555; font-weight: bold; background: #fff5f5; padding: 10px; border-radius: 10px; }
+        button { border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-size: 1rem; transition: 0.3s; margin: 8px; font-weight: bold; }
+        .btn-yes { background-color: #ff6b6b; color: white; width: 80%; }
+        .btn-no { background-color: #f0f0f0; color: #888; width: 80%; }
+        .btn-yes:hover { background-color: #ff5252; transform: scale(1.05); }
+        .admin-link { position: fixed; bottom: 15px; right: 15px; color: #dbdbdb; cursor: pointer; font-size: 12px; text-decoration: none; }
         .hidden { display: none !important; }
-        input { padding: 8px; margin: 5px; border-radius: 5px; border: 1px solid #ddd; width: 85%; }
+        input { padding: 10px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; width: 90%; font-size: 1rem; }
+        hr { border: 0; border-top: 1px dashed #ffb6c1; margin: 20px 0; }
     </style>
 </head>
 <body>
 
     <div id="main-card" class="card">
         <h1>可以去你家嗎？</h1>
-        <p id="display-time" class="time-text">載入中...</p>
+        <p id="display-time" class="time-text">讀取中...</p>
         <button class="btn-yes" onclick="answer('可以')">好呀！</button>
         <button class="btn-no" onclick="answer('不行')">不行...</button>
     </div>
 
     <div id="admin-card" class="card hidden">
         <h2>管理後台</h2>
-        <input type="password" id="admin-pass" placeholder="輸入管理密碼">
-        <button onclick="login()">登入</button>
+        <div id="login-section">
+            <input type="password" id="admin-pass" placeholder="輸入管理密碼">
+            <button class="btn-yes" style="width: 100%;" onclick="login()">登入</button>
+        </div>
+        
         <div id="admin-controls" class="hidden">
+            <p style="color: #ff6b6b; font-weight: bold;">後台設定</p>
+            <input type="text" id="user-name" placeholder="你的名字 (例如：小明)">
+            <input type="text" id="new-time" placeholder="更改時間 (例如：週六晚上 8 點)">
+            <button class="btn-yes" style="width: 100%;" onclick="updateSettings()">儲存並更新網頁</button>
             <hr>
-            <p>你的名字：</p>
-            <input type="text" id="user-name" placeholder="例如：小明">
-            <p>設定新時間：</p>
-            <input type="text" id="new-time" placeholder="例如：這週六晚上">
-            <button onclick="updateSettings()">更新並儲存</button>
-            <br><br>
-            <button onclick="window.location.reload()">返回首頁</button>
+            <button class="btn-no" style="width: 100%;" onclick="location.reload()">登出 / 返回</button>
         </div>
     </div>
 
     <div class="admin-link" onclick="toggleAdmin()">管理員登入</div>
 
     <script>
-        // 設定區
+        // === 核心資料設定 ===
         const ADMIN_PASSWORD = "12345678"; 
         const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdsl-Fe1LRzwl7LVmPEQ51EyYFQvk5vtjczLi6hpick-4ibLA/formResponse";
-        const ENTRY_ID = "entry.2074465160";
+        const ENTRY_ID = "entry.2074465160"; // 你的 Google 表單欄位 ID
 
-        // 初始化
+        // 頁面啟動時讀取儲存的資料
         window.onload = function() {
-            document.getElementById('display-time').innerText = localStorage.getItem('inviteTime') || "今天晚上 7 點";
-            document.getElementById('user-name').value = localStorage.getItem('userName') || "";
+            const savedTime = localStorage.getItem('inviteTime') || "今天晚上 7 點";
+            const savedName = localStorage.getItem('userName') || "";
+            document.getElementById('display-time').innerText = savedTime;
+            document.getElementById('user-name').value = savedName;
         };
 
+        // 訪客點擊按鈕功能
         function answer(choice) {
-            const name = localStorage.getItem('userName') || "匿名";
-            const formData = new FormData();
-            // 將名字和選擇合併記錄 (例如: 小明說可以)
-            formData.append(ENTRY_ID, `${name} 說：${choice}`);
+            let name = localStorage.getItem('userName');
+            
+            // 如果後台沒設名字，就問一下是誰
+            if (!name || name.trim() === "") {
+                name = prompt("請輸入您的名字以供記錄：");
+                if (name) {
+                    localStorage.setItem('userName', name);
+                } else {
+                    name = "神祕訪客";
+                }
+            }
 
-            fetch(FORM_URL, { method: "POST", body: formData, mode: "no-cors" });
-            alert(`已記錄：${name} 選擇了 ${choice}`);
+            const formData = new FormData();
+            // 格式： 名字 選擇了：內容
+            formData.append(ENTRY_ID, `${name} 選擇了：${choice}`);
+
+            fetch(FORM_URL, {
+                method: "POST",
+                body: formData,
+                mode: "no-cors"
+            }).then(() => {
+                alert(`謝謝 ${name}！回覆已傳送：${choice}`);
+            }).catch(() => {
+                alert("傳送失敗，請檢查網路連線。");
+            });
         }
 
+        // 切換後台顯示
         function toggleAdmin() {
             document.getElementById('main-card').classList.toggle('hidden');
             document.getElementById('admin-card').classList.toggle('hidden');
         }
 
+        // 登入功能
         function login() {
-            if (document.getElementById('admin-pass').value === ADMIN_PASSWORD) {
+            const inputPass = document.getElementById('admin-pass').value;
+            if (inputPass === ADMIN_PASSWORD) {
+                document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('admin-controls').classList.remove('hidden');
-                document.getElementById('admin-pass').classList.add('hidden');
             } else {
-                alert("密碼錯誤！");
+                alert("密碼錯誤！請重新輸入。");
             }
         }
 
+        // 儲存設定（名字與時間）
         function updateSettings() {
-            const time = document.getElementById('new-time').value;
-            const name = document.getElementById('user-name').value;
-            if (time) localStorage.setItem('inviteTime', time);
-            if (name) localStorage.setItem('userName', name);
-            alert("設定已儲存！");
-            window.location.reload();
+            const timeVal = document.getElementById('new-time').value;
+            const nameVal = document.getElementById('user-name').value;
+            
+            if (timeVal) localStorage.setItem('inviteTime', timeVal);
+            if (nameVal) localStorage.setItem('userName', nameVal);
+            
+            alert("設定儲存成功！網頁將重新載入。");
+            location.reload();
         }
     </script>
 </body>
